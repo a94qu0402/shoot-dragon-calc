@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>射龍門 籌碼/彩金計算器</title>
+  <title>射龍門 籌碼/彩金計算器（含對子比大小）</title>
   <style>
     body
     {
@@ -84,12 +84,24 @@
     {
       color: #0a7a0a;
     }
+    .pill
+    {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #f3f3f3;
+      font-size: 12px;
+      margin-left: 6px;
+    }
   </style>
 </head>
 <body>
   <h2>射龍門 籌碼/彩金計算器（離線單頁版）</h2>
   <div class="muted">
-    規則採用你描述的版本：開局每人付 1 倍最低投注進彩金；補牌下注 X：射中 +X（從彩金拿）、沒中 -X（加進彩金）、撞柱 -2X（加進彩金）、不補不退入場費。
+    規則（你提供的版本）：
+    <br>1) 開局：每位玩家付 1 倍最低投注金額進彩金池（入場費不退）。
+    <br>2) 一般兩張牌不同：補牌下注 X：射中 +X（從彩金拿）、沒中 -X（加進彩金）、撞柱（第3張=任一門牌）-2X（加進彩金）。
+    <br>3) 特殊兩張牌相同（對子比大小）：下注 X 並選大/小，第3張若符合選擇則 +X；若相反則 -X；若第3張也相同（3張點數相同）則撞柱 -3X（加進彩金）。
   </div>
 
   <div class="card">
@@ -120,12 +132,65 @@
       </div>
     </div>
     <div class="muted">
-      小提醒：如果你們「每局」都要再付一次入場費，就每局按一次「開始新一局」；如果只在整場開始時付一次，就只按一次。
+      如果你們「每局」都要再付一次入場費，就每局按一次「開始新一局」；如果只在整場開始時付一次，就只按一次。
     </div>
   </div>
 
   <div class="card">
-    <h3>② 進行補牌/結算</h3>
+    <h3>② 自動判定結算（建議用這個，含對子比大小）</h3>
+    <div class="muted">
+      點數請輸入 1~13：A=1、J=11、Q=12、K=13。<span class="pill">對子時需選大/小</span>
+    </div>
+    <div class="row">
+      <div>
+        <label>選擇玩家</label>
+        <select id="idSelPlayerAuto"></select>
+      </div>
+      <div>
+        <label>投注金額 X（不得超過目前彩金）</label>
+        <input id="idBetAuto" type="number" min="0" step="1" value="30" />
+      </div>
+      <div>
+        <label>第1張點數</label>
+        <input id="idCard1" type="number" min="1" max="13" step="1" value="3" />
+      </div>
+      <div>
+        <label>第2張點數</label>
+        <input id="idCard2" type="number" min="1" max="13" step="1" value="9" />
+      </div>
+      <div>
+        <label>第3張點數</label>
+        <input id="idCard3" type="number" min="1" max="13" step="1" value="6" />
+      </div>
+      <div>
+        <label>對子時選擇</label>
+        <select id="idPairChoice">
+          <option value="small">賭小（第3張 < 對子點數）</option>
+          <option value="big">賭大（第3張 > 對子點數）</option>
+        </select>
+      </div>
+      <div>
+        <button id="idBtnApplyAuto">自動判定並結算</button>
+      </div>
+      <div>
+        <button id="idBtnUndo">復原上一步</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="card" style="flex: 1; min-width: 260px; margin: 0;">
+        <div><b>目前彩金：</b><span id="idPot" class="mono">0</span></div>
+        <div class="muted">射中會從彩金扣 X；沒中/撞柱會把 X/2X/3X 加進彩金。</div>
+      </div>
+      <div class="card" style="flex: 2; min-width: 260px; margin: 0;">
+        <div class="muted">快速預覽（不會改帳）</div>
+        <div id="idQuickCheck" class="mono"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>③ 手動結算（可選）</h3>
+    <div class="muted">如果你們不想輸入牌點，也可直接選結果。注意：對子三張相同請自行選「撞柱(3X)」。</div>
     <div class="row">
       <div>
         <label>選擇玩家</label>
@@ -140,41 +205,29 @@
         <select id="idOutcome">
           <option value="win">射中龍門（+X）</option>
           <option value="lose">沒射中（-X）</option>
-          <option value="hit">撞柱（-2X）</option>
+          <option value="hit2">撞柱（-2X）</option>
+          <option value="hit3">撞柱（-3X，對子三張相同）</option>
           <option value="skip">不補（0，入場費不退）</option>
         </select>
       </div>
       <div>
         <label>備註（可不填）</label>
-        <input id="idNote" type="text" placeholder="例如：門牌 3-9 / 下注原因..." style="width: 260px;" />
+        <input id="idNote" type="text" placeholder="例如：門牌 3-9 / 對子9賭小..." style="width: 260px;" />
       </div>
       <div>
-        <button id="idBtnApply">套用這次結果</button>
-      </div>
-      <div>
-        <button id="idBtnUndo">復原上一步</button>
-      </div>
-    </div>
-    <div class="row">
-      <div class="card" style="flex: 1; min-width: 260px; margin: 0;">
-        <div><b>目前彩金：</b><span id="idPot" class="mono">0</span></div>
-        <div class="muted">射中會從彩金扣 X；沒中/撞柱會把 X/2X 加進彩金。</div>
-      </div>
-      <div class="card" style="flex: 2; min-width: 260px; margin: 0;">
-        <div class="muted">快速檢查</div>
-        <div id="idQuickCheck" class="mono"></div>
+        <button id="idBtnApplyManual">套用這次結果</button>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <h3>③ 玩家籌碼表</h3>
+    <h3>④ 玩家籌碼表</h3>
     <table>
       <thead>
         <tr>
           <th>玩家</th>
           <th>籌碼</th>
-          <th>統計（勝/負/撞/不補）</th>
+          <th>統計（勝/負/撞2X/撞3X/不補）</th>
         </tr>
       </thead>
       <tbody id="idTBodyPlayers"></tbody>
@@ -182,15 +235,15 @@
   </div>
 
   <div class="card">
-    <h3>④ 歷史紀錄</h3>
-    <div class="muted">每次套用結果都會記錄，方便對帳；可用「復原上一步」回退。</div>
+    <h3>⑤ 歷史紀錄</h3>
+    <div class="muted">每次結算都會記錄；可用「復原上一步」回退。</div>
     <textarea id="idHistory" rows="10" style="width: 100%;" class="mono" readonly></textarea>
   </div>
 
   <script>
     // ====== 狀態 ======
     let g_iPot = 0;
-    let g_arrPlayers = []; // { strName, iChip, iWin, iLose, iHit, iSkip }
+    let g_arrPlayers = []; // { strName, iChip, iWin, iLose, iHit2, iHit3, iSkip }
     let g_arrUndoStack = []; // snapshot stack
 
     // ====== DOM 指標 ======
@@ -201,13 +254,21 @@
     const pBtnStartRound = document.getElementById("idBtnStartRound");
     const pBtnResetAll = document.getElementById("idBtnResetAll");
 
+    const pSelPlayerAuto = document.getElementById("idSelPlayerAuto");
+    const pBetAuto = document.getElementById("idBetAuto");
+    const pCard1 = document.getElementById("idCard1");
+    const pCard2 = document.getElementById("idCard2");
+    const pCard3 = document.getElementById("idCard3");
+    const pPairChoice = document.getElementById("idPairChoice");
+    const pBtnApplyAuto = document.getElementById("idBtnApplyAuto");
+
     const pSelPlayer = document.getElementById("idSelPlayer");
     const pBet = document.getElementById("idBet");
     const pOutcome = document.getElementById("idOutcome");
     const pNote = document.getElementById("idNote");
-    const pBtnApply = document.getElementById("idBtnApply");
-    const pBtnUndo = document.getElementById("idBtnUndo");
+    const pBtnApplyManual = document.getElementById("idBtnApplyManual");
 
+    const pBtnUndo = document.getElementById("idBtnUndo");
     const pPot = document.getElementById("idPot");
     const pTBodyPlayers = document.getElementById("idTBodyPlayers");
     const pHistory = document.getElementById("idHistory");
@@ -221,6 +282,19 @@
         return 0;
       }
       return Math.trunc(iVal);
+    }
+
+    function fnIsCardValid(iCard)
+    {
+      if (Number.isFinite(iCard) === false)
+      {
+        return false;
+      }
+      if (iCard < 1 || iCard > 13)
+      {
+        return false;
+      }
+      return true;
     }
 
     function fnSnapshot()
@@ -268,13 +342,21 @@
     function fnRenderPlayersSelect()
     {
       pSelPlayer.innerHTML = "";
+      pSelPlayerAuto.innerHTML = "";
+
       for (let i = 0; i < g_arrPlayers.length; i++)
       {
         const oP = g_arrPlayers[i];
-        const pOpt = document.createElement("option");
-        pOpt.value = String(i);
-        pOpt.textContent = oP.strName;
-        pSelPlayer.appendChild(pOpt);
+
+        const pOpt1 = document.createElement("option");
+        pOpt1.value = String(i);
+        pOpt1.textContent = oP.strName;
+        pSelPlayer.appendChild(pOpt1);
+
+        const pOpt2 = document.createElement("option");
+        pOpt2.value = String(i);
+        pOpt2.textContent = oP.strName;
+        pSelPlayerAuto.appendChild(pOpt2);
       }
     }
 
@@ -297,7 +379,11 @@
         const pTdStat = document.createElement("td");
         pTdStat.className = "mono";
         pTdStat.textContent =
-          "勝 " + oP.iWin + " / 負 " + oP.iLose + " / 撞 " + oP.iHit + " / 不補 " + oP.iSkip;
+          "勝 " + oP.iWin +
+          " / 負 " + oP.iLose +
+          " / 撞2X " + oP.iHit2 +
+          " / 撞3X " + oP.iHit3 +
+          " / 不補 " + oP.iSkip;
 
         pTr.appendChild(pTdName);
         pTr.appendChild(pTdChip);
@@ -312,57 +398,213 @@
       pPot.textContent = String(g_iPot);
     }
 
-    function fnRenderQuickCheck()
+    function fnCalcDeltaByManual(strOutcome, iX)
     {
-      const iIdx = fnClampToInt(Number(pSelPlayer.value));
-      const iX = fnClampToInt(Number(pBet.value));
-      const strOutcome = String(pOutcome.value);
-
-      if (g_arrPlayers.length <= 0 || iIdx < 0 || iIdx >= g_arrPlayers.length)
-      {
-        pQuickCheck.textContent = "";
-        return;
-      }
-
-      const oP = g_arrPlayers[iIdx];
-
       let iDeltaChip = 0;
       let iDeltaPot = 0;
+      let strTag = "";
 
       if (strOutcome === "win")
       {
         iDeltaChip = iX;
         iDeltaPot = -iX;
+        strTag = "射中";
       }
       else if (strOutcome === "lose")
       {
         iDeltaChip = -iX;
         iDeltaPot = iX;
+        strTag = "沒中";
       }
-      else if (strOutcome === "hit")
+      else if (strOutcome === "hit2")
       {
         iDeltaChip = -2 * iX;
         iDeltaPot = 2 * iX;
+        strTag = "撞柱(2X)";
+      }
+      else if (strOutcome === "hit3")
+      {
+        iDeltaChip = -3 * iX;
+        iDeltaPot = 3 * iX;
+        strTag = "撞柱(3X)";
       }
       else
       {
         iDeltaChip = 0;
         iDeltaPot = 0;
+        strTag = "不補";
       }
 
-      const iPotAfter = g_iPot + iDeltaPot;
-      const iChipAfter = oP.iChip + iDeltaChip;
+      return { iDeltaChip: iDeltaChip, iDeltaPot: iDeltaPot, strTag: strTag };
+    }
 
-      const strWarn =
-        (strOutcome !== "skip" && iX > g_iPot && strOutcome === "win")
-        ? "  （警告：射中需要從彩金扣 X，但彩金不足）"
-        : "";
+    function fnCalcDeltaByCards(iC1, iC2, iC3, strPairChoice, iX)
+    {
+      // 回傳：{ strOutcome, iDeltaChip, iDeltaPot, strTag, strExplain }
+      if (iC1 === iC2)
+      {
+        // 對子比大小
+        if (iC3 === iC1)
+        {
+          // 3張相同：撞柱 3X
+          return {
+            strOutcome: "hit3",
+            iDeltaChip: -3 * iX,
+            iDeltaPot: 3 * iX,
+            strTag: "撞柱(3X)",
+            strExplain: "對子 " + iC1 + "，第3張同點數"
+          };
+        }
+
+        if (strPairChoice === "small")
+        {
+          if (iC3 < iC1)
+          {
+            return {
+              strOutcome: "win",
+              iDeltaChip: iX,
+              iDeltaPot: -iX,
+              strTag: "賭小贏",
+              strExplain: "對子 " + iC1 + "，第3張 " + iC3 + " < " + iC1
+            };
+          }
+          else
+          {
+            return {
+              strOutcome: "lose",
+              iDeltaChip: -iX,
+              iDeltaPot: iX,
+              strTag: "賭小輸",
+              strExplain: "對子 " + iC1 + "，第3張 " + iC3 + " > " + iC1
+            };
+          }
+        }
+        else
+        {
+          // big
+          if (iC3 > iC1)
+          {
+            return {
+              strOutcome: "win",
+              iDeltaChip: iX,
+              iDeltaPot: -iX,
+              strTag: "賭大贏",
+              strExplain: "對子 " + iC1 + "，第3張 " + iC3 + " > " + iC1
+            };
+          }
+          else
+          {
+            return {
+              strOutcome: "lose",
+              iDeltaChip: -iX,
+              iDeltaPot: iX,
+              strTag: "賭大輸",
+              strExplain: "對子 " + iC1 + "，第3張 " + iC3 + " < " + iC1
+            };
+          }
+        }
+      }
+      else
+      {
+        // 一般射龍門
+        let iLow = iC1;
+        let iHigh = iC2;
+        if (iLow > iHigh)
+        {
+          iLow = iC2;
+          iHigh = iC1;
+        }
+
+        if (iC3 === iC1 || iC3 === iC2)
+        {
+          // 撞柱 2X
+          return {
+            strOutcome: "hit2",
+            iDeltaChip: -2 * iX,
+            iDeltaPot: 2 * iX,
+            strTag: "撞柱(2X)",
+            strExplain: "門牌 " + iLow + "-" + iHigh + "，第3張撞門牌"
+          };
+        }
+
+        if (iC3 > iLow && iC3 < iHigh)
+        {
+          return {
+            strOutcome: "win",
+            iDeltaChip: iX,
+            iDeltaPot: -iX,
+            strTag: "射中",
+            strExplain: "門牌 " + iLow + "-" + iHigh + "，第3張在中間"
+          };
+        }
+        else
+        {
+          return {
+            strOutcome: "lose",
+            iDeltaChip: -iX,
+            iDeltaPot: iX,
+            strTag: "沒中",
+            strExplain: "門牌 " + iLow + "-" + iHigh + "，第3張在外面"
+          };
+        }
+      }
+    }
+
+    function fnRenderQuickCheck()
+    {
+      if (g_arrPlayers.length <= 0)
+      {
+        pQuickCheck.textContent = "";
+        return;
+      }
+
+      const iIdx = fnClampToInt(Number(pSelPlayerAuto.value));
+      const iX = fnClampToInt(Number(pBetAuto.value));
+      const iC1 = fnClampToInt(Number(pCard1.value));
+      const iC2 = fnClampToInt(Number(pCard2.value));
+      const iC3 = fnClampToInt(Number(pCard3.value));
+      const strPairChoice = String(pPairChoice.value);
+
+      if (iIdx < 0 || iIdx >= g_arrPlayers.length)
+      {
+        pQuickCheck.textContent = "";
+        return;
+      }
+
+      if (iX <= 0)
+      {
+        pQuickCheck.textContent = "請輸入投注金額 X（>0）。";
+        return;
+      }
+
+      if (fnIsCardValid(iC1) === false || fnIsCardValid(iC2) === false || fnIsCardValid(iC3) === false)
+      {
+        pQuickCheck.textContent = "牌點需為 1~13（A=1、J=11、Q=12、K=13）。";
+        return;
+      }
+
+      const oP = g_arrPlayers[iIdx];
+      const oRes = fnCalcDeltaByCards(iC1, iC2, iC3, strPairChoice, iX);
+
+      const iPotAfter = g_iPot + oRes.iDeltaPot;
+      const iChipAfter = oP.iChip + oRes.iDeltaChip;
+
+      let strWarn = "";
+      if (iX > g_iPot)
+      {
+        strWarn = "（警告：X 不得超過彩金 " + g_iPot + "）";
+      }
+      if (oRes.strOutcome === "win" && iX > g_iPot)
+      {
+        strWarn = "（警告：射中需要彩金扣 X，但彩金不足）";
+      }
 
       pQuickCheck.textContent =
-        "玩家 " + oP.strName +
-        "：籌碼 " + oP.iChip + " → " + iChipAfter +
-        "；彩金 " + g_iPot + " → " + iPotAfter +
-        strWarn;
+        "判定：" + oRes.strTag +
+        "｜" + oRes.strExplain +
+        "｜玩家 " + oP.strName + " 籌碼 " + oP.iChip + " → " + iChipAfter +
+        "｜彩金 " + g_iPot + " → " + iPotAfter +
+        (strWarn.length > 0 ? (" " + strWarn) : "");
     }
 
     function fnRenderAll()
@@ -394,7 +636,8 @@
           iChip: iStartChip,
           iWin: 0,
           iLose: 0,
-          iHit: 0,
+          iHit2: 0,
+          iHit3: 0,
           iSkip: 0
         });
       }
@@ -430,7 +673,108 @@
       fnAppendHistory("[開局] 每人入場費 " + iMin + "，共加入彩金 " + iSum + "；目前彩金 " + g_iPot + "。");
     }
 
-    function fnApply()
+    function fnApplyByDelta(iIdx, iDeltaChip, iDeltaPot, strTag, strExtraNote)
+    {
+      const oP = g_arrPlayers[iIdx];
+
+      oP.iChip += iDeltaChip;
+      g_iPot += iDeltaPot;
+
+      if (strTag === "射中" || strTag === "賭小贏" || strTag === "賭大贏")
+      {
+        oP.iWin += 1;
+      }
+      else if (strTag === "沒中" || strTag === "賭小輸" || strTag === "賭大輸")
+      {
+        oP.iLose += 1;
+      }
+      else if (strTag === "撞柱(2X)")
+      {
+        oP.iHit2 += 1;
+      }
+      else if (strTag === "撞柱(3X)")
+      {
+        oP.iHit3 += 1;
+      }
+      else
+      {
+        oP.iSkip += 1;
+      }
+
+      fnRenderAll();
+
+      const strLine =
+        "[結算] " + oP.strName +
+        "｜" + strTag +
+        "｜籌碼變動 " + iDeltaChip +
+        "｜彩金變動 " + iDeltaPot +
+        "｜目前彩金 " + g_iPot +
+        (strExtraNote && strExtraNote.length > 0 ? ("｜註：" + strExtraNote) : "");
+
+      fnAppendHistory(strLine);
+    }
+
+    function fnApplyAuto()
+    {
+      if (g_arrPlayers.length <= 0)
+      {
+        fnAppendHistory("[系統] 需要先建立名單。");
+        return;
+      }
+
+      const iIdx = fnClampToInt(Number(pSelPlayerAuto.value));
+      if (iIdx < 0 || iIdx >= g_arrPlayers.length)
+      {
+        fnAppendHistory("[系統] 玩家索引無效。");
+        return;
+      }
+
+      const iX = fnClampToInt(Number(pBetAuto.value));
+      const iC1 = fnClampToInt(Number(pCard1.value));
+      const iC2 = fnClampToInt(Number(pCard2.value));
+      const iC3 = fnClampToInt(Number(pCard3.value));
+      const strPairChoice = String(pPairChoice.value);
+
+      if (iX <= 0)
+      {
+        fnAppendHistory("[系統] 投注金額 X 需大於 0。");
+        return;
+      }
+
+      if (fnIsCardValid(iC1) === false || fnIsCardValid(iC2) === false || fnIsCardValid(iC3) === false)
+      {
+        fnAppendHistory("[系統] 牌點需為 1~13（A=1、J=11、Q=12、K=13）。");
+        return;
+      }
+
+      // 你提供規則：投注不得超過彩金總額
+      if (iX > g_iPot)
+      {
+        fnAppendHistory("[系統] 投注金額不得超過彩金總額（彩金 " + g_iPot + "，X " + iX + "）。");
+        return;
+      }
+
+      const oRes = fnCalcDeltaByCards(iC1, iC2, iC3, strPairChoice, iX);
+
+      // 若射中要從彩金扣 X，仍需檢查彩金足夠（雖然 iX<=g_iPot 已涵蓋）
+      if (oRes.strOutcome === "win" && iX > g_iPot)
+      {
+        fnAppendHistory("[系統] 射中需要從彩金扣 X，但目前彩金不足（彩金 " + g_iPot + "，X " + iX + "）。");
+        return;
+      }
+
+      fnSnapshot();
+
+      const strExtra =
+        "X=" + iX +
+        "｜牌=" + iC1 + "," + iC2 + "," + iC3 +
+        (iC1 === iC2 ? ("｜對子選擇=" + (strPairChoice === "small" ? "小" : "大")) : "") +
+        "｜" + oRes.strExplain;
+
+      fnApplyByDelta(iIdx, oRes.iDeltaChip, oRes.iDeltaPot, oRes.strTag, strExtra);
+    }
+
+    function fnApplyManual()
     {
       if (g_arrPlayers.length <= 0)
       {
@@ -445,9 +789,8 @@
         return;
       }
 
-      const oP = g_arrPlayers[iIdx];
-      const iX = fnClampToInt(Number(pBet.value));
       const strOutcome = String(pOutcome.value);
+      const iX = fnClampToInt(Number(pBet.value));
       const strNote = String(pNote.value || "").trim();
 
       if (strOutcome !== "skip")
@@ -457,70 +800,36 @@
           fnAppendHistory("[系統] 投注金額 X 需大於 0。");
           return;
         }
-        if (iX > g_iPot && strOutcome === "win")
+        if (iX > g_iPot)
         {
-          fnAppendHistory("[系統] 射中需要從彩金扣 X，但目前彩金不足（彩金 " + g_iPot + "，X " + iX + "）。");
+          fnAppendHistory("[系統] 投注金額不得超過彩金總額（彩金 " + g_iPot + "，X " + iX + "）。");
           return;
         }
-        if (iX > g_iPot && strOutcome !== "win")
+        if (strOutcome === "win" && iX > g_iPot)
         {
-          // 你貼的規則限制「投注不得超過彩金總額」
-          fnAppendHistory("[系統] 投注金額不得超過彩金總額（彩金 " + g_iPot + "，X " + iX + "）。");
+          fnAppendHistory("[系統] 射中需要從彩金扣 X，但目前彩金不足（彩金 " + g_iPot + "，X " + iX + "）。");
           return;
         }
       }
 
       fnSnapshot();
 
-      let iDeltaChip = 0;
-      let iDeltaPot = 0;
-      let strTag = "";
-
-      if (strOutcome === "win")
+      if (strOutcome === "skip")
       {
-        iDeltaChip = iX;
-        iDeltaPot = -iX;
-        oP.iWin += 1;
-        strTag = "射中";
-      }
-      else if (strOutcome === "lose")
-      {
-        iDeltaChip = -iX;
-        iDeltaPot = iX;
-        oP.iLose += 1;
-        strTag = "沒中";
-      }
-      else if (strOutcome === "hit")
-      {
-        iDeltaChip = -2 * iX;
-        iDeltaPot = 2 * iX;
-        oP.iHit += 1;
-        strTag = "撞柱";
-      }
-      else
-      {
-        iDeltaChip = 0;
-        iDeltaPot = 0;
-        oP.iSkip += 1;
-        strTag = "不補";
+        fnApplyByDelta(iIdx, 0, 0, "不補", (strNote.length > 0 ? strNote : ""));
+        pNote.value = "";
+        return;
       }
 
-      oP.iChip += iDeltaChip;
-      g_iPot += iDeltaPot;
+      const oRes = fnCalcDeltaByManual(strOutcome, iX);
 
-      fnRenderAll();
+      let strExtra = "X=" + iX;
+      if (strNote.length > 0)
+      {
+        strExtra += "｜" + strNote;
+      }
 
-      const strLine =
-        "[結算] " + oP.strName +
-        "｜" + strTag +
-        (strOutcome === "skip" ? "" : ("｜X=" + iX)) +
-        "｜籌碼變動 " + iDeltaChip +
-        "｜彩金變動 " + iDeltaPot +
-        "｜目前彩金 " + g_iPot +
-        (strNote.length > 0 ? ("｜註：" + strNote) : "");
-
-      fnAppendHistory(strLine);
-
+      fnApplyByDelta(iIdx, oRes.iDeltaChip, oRes.iDeltaPot, oRes.strTag, strExtra);
       pNote.value = "";
     }
 
@@ -544,9 +853,9 @@
       fnStartNewRound();
     });
 
-    pBtnApply.addEventListener("click", function()
+    pBtnResetAll.addEventListener("click", function()
     {
-      fnApply();
+      fnResetAll();
     });
 
     pBtnUndo.addEventListener("click", function()
@@ -554,22 +863,42 @@
       fnUndo();
     });
 
-    pBtnResetAll.addEventListener("click", function()
+    pBtnApplyAuto.addEventListener("click", function()
     {
-      fnResetAll();
+      fnApplyAuto();
     });
 
-    pSelPlayer.addEventListener("change", function()
+    pBtnApplyManual.addEventListener("click", function()
+    {
+      fnApplyManual();
+    });
+
+    pSelPlayerAuto.addEventListener("change", function()
     {
       fnRenderQuickCheck();
     });
 
-    pBet.addEventListener("input", function()
+    pBetAuto.addEventListener("input", function()
     {
       fnRenderQuickCheck();
     });
 
-    pOutcome.addEventListener("change", function()
+    pCard1.addEventListener("input", function()
+    {
+      fnRenderQuickCheck();
+    });
+
+    pCard2.addEventListener("input", function()
+    {
+      fnRenderQuickCheck();
+    });
+
+    pCard3.addEventListener("input", function()
+    {
+      fnRenderQuickCheck();
+    });
+
+    pPairChoice.addEventListener("change", function()
     {
       fnRenderQuickCheck();
     });
